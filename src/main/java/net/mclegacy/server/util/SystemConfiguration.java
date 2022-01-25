@@ -9,7 +9,7 @@ public class SystemConfiguration
     public SystemConfiguration()
     {
         apiKey = "CHANGEME :D";
-        contentDirectory = "pages/";
+        contentDirectory = "content/";
         jettyNetworkConfiguration = new JettyNetworkConfiguration();
     }
 
