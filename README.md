@@ -1,3 +1,13 @@
-# MCLegacy
+## About This Project
+We are all about uniting the legacy community and providing useful tools & resources to everyone, free of charge. We have mods & plugins, texture packs, guides, videos, and even a fully featured social media platform.
 
-Your #1 open-source retro Minecraft website that has mod & texturepack archives, guides, videos, tools, and even an entire social media platform. It's all 100% free, and anyone can open a pull request. 
+## Where?
+The site *will* be live at https://mclegacy.net.<br/>
+The dev site will be live at https://dev.mclegacy.net.
+
+## Powered By
+* Jetty
+* Bootstrap
+* SweetAlert
+* jQuery
+* JohnyBans (https://bans.johnymuffin.com)
