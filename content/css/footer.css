@@ -1,0 +1,17 @@
+/* .footerContainer {
+    padding: 0 15px;
+    position: absolute;
+    bottom: 0;
+} */
+
+#disclaimer {
+    text-align: left;
+    float: left;
+}
+
+#genTime {
+    text-align: right;
+    float: right;
+    bottom: 0;
+    position: absolute;
+}
