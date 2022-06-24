@@ -1,0 +1,40 @@
+@import url(//fonts.googleapis.com/css?family=VT323);
+
+#controls {
+    float: right;
+}
+
+#btnConnect {
+    margin-top: 6px;
+}
+
+/**
+* Terminal container.
+* Important note: The "VT323" font face comes from Google web fonts.
+*/
+#terminal {
+    font-family: 'Courier New', monospaced;
+    width:       40vw;
+    height:      70vh;
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+    border-radius: 10px;
+    float: left;
+    overflow: auto;
+}
+
+/**
+* The input span where the input happens.
+* Also applied to the previous inputs made in the current session.
+*/
+#terminal .input {
+    height:         1em;
+    min-width:      1em;
+    outline-color:  transparent;
+    border:         none;
+    display:        inline-block;
+}
+
+#terminal p {
+    margin:     0;
+    padding:    5px;
+}

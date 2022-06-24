@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>${TITLE}</title>
+        ${META}
+
+        ${CSS}
+        <link rel="stylesheet" href="/asset?key=css/terminal.css">
+        ${SCRIPTS}
+        <script src="/asset?key=js-public/terminal.js"></script>
+        <script>
+            var addLine = function(line)
+            {
+                document.getElementById("output").insertAdjacentHTML('beforeEnd', "<p>" + line + "</p>");
+            };
+
+            var log = function(log)
+            {
+                addLine(escape(log));
+                let term = document.getElementById("terminal");
+                term.querySelector(".input").focus();
+                const element = document.getElementById("terminal");
+                element.scrollTop = element.scrollHeight;
+            };
+
+            var escape = function(str)
+            {
+                return new Option(str).innerHTML;
+            };
+
+            var connected = function()
+            {
+                $("#wsAddress").prop("readonly", true);
+                $("#btnConnect").html("Disconnect");
+                $("#btnConnect").css("background-color", "#ff0000");
+                $("#inputPrompt").attr("contenteditable", true);
+            };
+
+            var disconnected = function()
+            {
+                $("#wsAddress").prop("readonly", false);
+                $("#btnConnect").html("Connect");
+                $("#btnConnect").css("background-color", "#2fa4e7");
+                $("#inputPrompt").attr("contenteditable", false);
+            };
+
+            $(document).ready(function()
+            {
+                var socket = null;
+
+                Terminal.init(document.getElementById("terminal"), function(cmd, args)
+                {
+                    if (socket === null) return;
+                    socket.send(args.join(' '));
+                });
+
+                $("#btnConnect").click(function()
+                {
+                    if (socket != null)
+                    {
+                        socket.close();
+                        location.reload(true);
+                        return;
+                    }
+
+                    let wsAddress = $("#wsAddress").val();
+                    socket = new WebSocket(wsAddress);
+
+                    socket.onopen = function(event)
+                    {
+                        connected();
+                        socket.send(".mode REMOTE_CONSOLE");
+                    };
+
+                    socket.onmessage = function(event)
+                    {
+                        console.log(event.data);
+                        log(event.data);
+                    };
+
+                    socket.onclose = function(event)
+                    {
+                        disconnected();
+                        if (!event.wasClean) log("WebSocket connection was terminated abnormally");
+                        else log(`Connection closed cleanly, code=${event.code}, reason=${event.reason}`);
+                    };
+
+                    socket.onerror = function(event)
+                    {
+                        console.log("WS error: " + event);
+                    };
+                });
+
+                document.getElementById("terminal").querySelector(".input").focus();
+            });
+        </script>
+    </head>
+    <body>
+        <div id="header">${HEADER}</div>
+        <main class="container">
+            <div class="row">
+                <div id="terminal" class="col">
+                    <div id="output">
+                        <p><b>MCLegacy Poseidon Shell</b></p>
+                        <p><i>Enter a WebSocket address to get started.</i></p>
+                    </div>
+                    <p class="hidden">
+                        <span class="prompt">&sim; &gt; </span>
+                        <span contenteditable="false" class="input" id="inputPrompt"> </span>
+                    </p>
+                </div>
+                <div id="controls" class="col">
+                    <div class="form-floating">
+                        <input class="form-control" type="text" id="wsAddress" placeholder="Websocket address...">
+                        <label for="wsAddress">WebSocket address</label>
+                    </div>
+                    <button id="btnConnect" class="form-control btn btn-primary">Connect</button>
+                    <hr>
+                    <p>You must install the MCLegacy & JettyLib plugins on your server in order to use this system. The plugins require <a href="https://jenkins.glass-launcher.net/job/Project-Poseidon/" target="_blank">Project Poseidon</a>, and only officially support b1.7.3.</p>
+                    <a href="/dl/plugins/MCLegacy-1.0.jar">Download MCLegacy-1.0.jar</a><br/>
+                    <a href="/dl/plugins/JettyLib-1.0.jar">Download JettyLib-1.0.jar</a>
+                </div>
+            </div>
+        </main>
+        <footer class="footer">${FOOTER}</footer>
+    </body>
+</html>

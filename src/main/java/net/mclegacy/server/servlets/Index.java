@@ -6,14 +6,11 @@ import java.io.IOException;
 
 public class Index extends ServletBase
 {
-    public Index()
-    {
-        super("index.html", "shared/template.html");
-    }
-
     @Override
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException
     {
+        resource = "index.html";
+        basicDynamicStack();
         super.doGet(request, response);
     }
 }

@@ -1,25 +1,40 @@
-<script>swal("READ ME", "This website is still in beta, please be patient!", "info");</script>
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>${TITLE}</title>
+        ${META}
 
-<div class="p-5 mb-4 bg-light rounded-3">
-    <div class="container-fluid py-5">
-        <h1 class="display-5 fw-bold">What is this place?</h1>
-        <p class="col-md-8 fs-4">Welcome to MCLegacy! This is your one-stop Minecraft shop for everything retro! Though, we don't actually sell you anything. We are here to help you connect with like-minded people and get access to all the resources you could ever need.</p>
-        <button class="btn btn-primary btn-lg" type="button">Sign me up!</button>
-    </div>
-</div>
+        ${CSS}
+        ${SCRIPTS}
+        <!--<script>swal("READ ME", "This website is still in beta, please be patient!", "info");</script>-->
+    </head>
+    <body>
+        <div id="header">${HEADER}</div>
+        <main class="container">
+            <div class="p-5 mb-4 bg-light rounded-3">
+                <div class="container-fluid py-5">
+                    <h1 class="display-5 fw-bold">What is this place?</h1>
+                    <p class="col-md-8 fs-4">Welcome to MCLegacy! We aim to provide community resources to players & servers alike. We plan to expand our efforts to include many things, but for now we focus on server management.</p>
+                    <a class="btn btn-primary btn-lg" href="/srv/console" type="button">Sign me up!</a>
+                </div>
+            </div>
 
-<div class="row align-items-md-stretch">
-    <div class="col-md-6">
-        <div class="h-100 p-5 text-white bg-dark rounded-3">
-            <h2>Where do I start??</h2>
-            <p>We have lots to look at, but we recommend starting with an introduction in the <a href="/community">community</a> first.</p>
-            <a class="btn btn-outline-light" type="button" href="/community">Take me there!</a>
-        </div>
-    </div>
-    <div class="col-md-6">
-        <div class="h-100 p-5 bg-light border rounded-3">
-            <h2>Who are you?</h2>
-            <p>We call ourselves Team Omega, though our group isn't a legal entity. Our two primary administrators are LeowFlow & moderator_man (that's me, the dev).</p>
-        </div>
-    </div>
-</div>
+            <div class="row align-items-md-stretch">
+                <div class="col-md-6">
+                    <div class="h-100 p-5 text-white bg-dark rounded-3">
+                        <h2>Where do I go from here??</h2>
+                        <p>We don't have much yet, but you can start with the Poseidon Shell first.</p>
+                        <a class="btn btn-outline-light" type="button" href="/srv/console">Take me there!</a>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="h-100 p-5 bg-light border rounded-3">
+                        <h2>Who are you?</h2>
+                        <p>We call ourselves Team Omega, though our group isn't a legal entity. Our two primary administrators are LeowFlow & moderator_man (that's me, the dev). We run a b1.7.3 server called <a href="https://os-mc.net" target="_blank">Old School Minecraft</a>.</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+        <footer class="footer">${FOOTER}</footer>
+    </body>
+</html>

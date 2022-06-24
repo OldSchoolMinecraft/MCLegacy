@@ -1,7 +1,6 @@
 package net.mclegacy.server.util;
 
 import net.mclegacy.server.MCLegacy;
-import net.mclegacy.server.page.processing.ContentProcessor;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -9,8 +8,6 @@ import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
 
 /**
- * Basically does the same stuff as MFile but much cleaner.
- *
  * @author moderator_man
  * @since 1.0
  */
@@ -20,12 +17,14 @@ public class ResourceLoader
     private String basePath;
     private int lastReadBytesTotal = 0;
     private boolean exists;
+    private boolean internal = false;
     private BasicFileAttributes attr;
+    private String preLoadContent;
 
     public ResourceLoader(String resourceLocation)
     {
         this.resourceLocation = resourceLocation;
-        this.basePath = MCLegacy.getInstance().getConfig().contentDirectory;
+        this.basePath = "content/";
         this.exists = new File(basePath + resourceLocation).exists();
         if (!exists) return;
         try
@@ -40,9 +39,40 @@ public class ResourceLoader
         this.basePath = basePath;
     }
 
+    public ResourceLoader useInternal()
+    {
+        internal = true;
+        basePath = "/" + basePath;
+        return this;
+    }
+
+    public ResourceLoader preLoad()
+    {
+        if (preLoadContent != null) return this; // do not preload twice
+        preLoadContent = read();
+        return this;
+    }
+
     public BasicFileAttributes getAttributes()
     {
         return attr;
+    }
+
+    public String getPreLoadContent()
+    {
+        return preLoadContent;
+    }
+
+    public void injectResource(String key, ResourceLoader resource)
+    {
+        injectContent(key, resource.read());
+    }
+
+    public void injectContent(String key, String content)
+    {
+        if (preLoadContent == null)
+            throw new RuntimeException("You must pre-load the content before you inject content!");
+        preLoadContent = preLoadContent.replace(String.format("${%s}", key), content);
     }
 
     public boolean isGood()
@@ -73,14 +103,14 @@ public class ResourceLoader
 
     public String read()
     {
-        return readAsString(getFileInputStream());
+        return readAsString(internal ? getInputStream() : getFileInputStream());
     }
 
     private String readAsString(InputStream is)
     {
+        if (is == null) return "is == null @ " + MCLegacy.getLine() + " -- please report this error to the system administrator."; // sanity check
         lastReadBytesTotal = 0;
         StringBuilder sb = new StringBuilder();
-        if (is == null) return "buildString failed: is == null"; // sanity check
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(is)))
         {
             char[] buf = new char[1024];
@@ -100,8 +130,8 @@ public class ResourceLoader
 
     public boolean directTo(InputStream is, Writer writer)
     {
-        lastReadBytesTotal = 0;
         if (is == null) return false; // sanity check
+        lastReadBytesTotal = 0;
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(is)))
         {
             char[] buf = new char[1024];

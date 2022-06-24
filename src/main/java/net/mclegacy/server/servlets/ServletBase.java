@@ -1,14 +1,9 @@
 package net.mclegacy.server.servlets;
 
-import com.google.gson.Gson;
-import net.mclegacy.server.page.processing.CSSContentProcessor;
-import net.mclegacy.server.page.processing.ContentProcessor;
-import net.mclegacy.server.page.PageMetaTags;
-import net.mclegacy.server.page.processing.ScriptsContentProcessor;
-import net.mclegacy.server.util.TimeKeeper;
 import net.mclegacy.server.MCLegacy;
-import net.mclegacy.server.main.Main;
 import net.mclegacy.server.util.ResourceLoader;
+import net.mclegacy.server.util.SystemConfiguration;
+import net.mclegacy.server.util.TimeKeeper;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
 
@@ -17,123 +12,106 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
 import java.util.List;
-import java.util.logging.Logger;
 
 public abstract class ServletBase extends HttpServlet
 {
-    protected static final Logger log = Main.getLogger();
-    protected static final Gson gson = new Gson();
-
-    protected final ResourceLoader cssLoader = new ResourceLoader("shared/template/css.html");
-    protected final ResourceLoader scriptsLoader = new ResourceLoader("shared/template/scripts.html");
-    protected final ResourceLoader metaLoader = new ResourceLoader("shared/template/meta.html");
-    protected final ResourceLoader bodyTopLoader = new ResourceLoader("shared/template/body_top.html");
-    protected final ResourceLoader bodyBottomLoader = new ResourceLoader("shared/template/body_bottom.html");
-    protected final ResourceLoader headerLoader = new ResourceLoader("shared/header.html");
-    protected final ResourceLoader footerLoader = new ResourceLoader("shared/footer.html");
-
-    protected final CSSContentProcessor cssProcessor = new CSSContentProcessor(cssLoader);
-    protected final ScriptsContentProcessor scriptsProcessor = new ScriptsContentProcessor(scriptsLoader);
-    protected final ContentProcessor metaProcessor = new ContentProcessor(metaLoader);
-    protected final ContentProcessor bodyTopProcessor = new ContentProcessor(bodyTopLoader);
-    protected final ContentProcessor bodyBottomProcessor = new ContentProcessor(bodyBottomLoader);
-    protected final ContentProcessor headerProcessor = new ContentProcessor(headerLoader);
-    protected final ContentProcessor footerProcessor = new ContentProcessor(footerLoader);
-
-    protected boolean enableKeyCheck = false;
-    protected int statusCode = 200;
-    protected ResourceLoader contentLoader;
-    protected ContentProcessor contentProcessor;
-    protected ResourceLoader templateLoader;
-    protected ContentProcessor templateProcessor;
+    protected String resource;
     protected String contentType = "text/html";
-    protected PageMetaTags metaTags = new PageMetaTags();
-    private TimeKeeper timeKeeper = new TimeKeeper();
-
-    public ServletBase() {}
-
-    public ServletBase(String sourceFile)
-    {
-        this.contentLoader = new ResourceLoader(sourceFile);
-        this.contentProcessor = new ContentProcessor(contentLoader);
-        this.contentType = "text/html";
-    }
-
-    public ServletBase(String sourceFile, String templateFile)
-    {
-        this(sourceFile);
-        this.templateLoader = new ResourceLoader(templateFile);
-        this.templateProcessor = new ContentProcessor(templateLoader);
-        this.templateProcessor.addPreProcessorHook((pageContent) ->
-        {
-            String currentContent = pageContent;
-            currentContent = currentContent.replace("${TITLE}", metaTags.title);
-            currentContent = currentContent.replace("${META}", metaProcessor.getCurrentContent());
-            currentContent = currentContent.replace("${CSS}", cssProcessor.getCurrentContent());
-            currentContent = currentContent.replace("${SCRIPTS}", scriptsProcessor.getCurrentContent());
-            currentContent = currentContent.replace("${BODY_TOP}", bodyTopProcessor.getCurrentContent());
-            currentContent = currentContent.replace("${HEADER}", headerProcessor.getCurrentContent());
-            currentContent = currentContent.replace("${CONTENT}", contentProcessor.getCurrentContent());
-            currentContent = currentContent.replace("${FOOTER}", footerProcessor.getCurrentContent());
-            currentContent = currentContent.replace("${BODY_BOTTOM}", bodyBottomProcessor.getCurrentContent());
-            currentContent = currentContent.replace("${GEN_TIME}", "" + timeKeeper.calc());
-
-            currentContent = currentContent.replace("${OG_TYPE}", metaTags.type);
-            currentContent = currentContent.replace("${OG_TITLE}", metaTags.title);
-            currentContent = currentContent.replace("${OG_DESCRIPTION}", metaTags.description);
-            currentContent = currentContent.replace("${OG_URL}", metaTags.url);
-            currentContent = currentContent.replace("${OG_IMAGE}", metaTags.image);
-
-            return currentContent;
-        });
-
-        log.info("Servlet created with template: " + sourceFile + ", " + templateFile);
-    }
-
-    public ServletBase(String sourceFile, String templateFile, String title)
-    {
-        this(sourceFile, templateFile);
-        this.metaTags.title = title;
-    }
-
-    public ServletBase(String sourceFile, boolean enableKeyCheck)
-    {
-        this(sourceFile);
-        this.enableKeyCheck = enableKeyCheck;
-    }
+    protected int statusCode = 200;
+    protected boolean enableKeyCheck;
+    protected HashMap<String, String> dynamicResources = new HashMap<>();
+    protected TimeKeeper timeKeeper = new TimeKeeper();
+    protected SystemConfiguration config = MCLegacy.getInstance().getConfig();
 
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException
     {
-        timeKeeper.start = System.currentTimeMillis();
-        response.setStatus(statusCode);
-        response.setContentType(contentType);
-        response.setHeader("Server", "MCLegacy v" + MCLegacy.VERSION + " -- Christ is King of Kings");
+        timeKeeper.start();
 
-        if (enableKeyCheck)
+        if (resource == null)
         {
-            List<NameValuePair> params = URLEncodedUtils.parse("http://dummy/?" + request.getQueryString(), StandardCharsets.UTF_8);
-            for (NameValuePair pair : params)
-                if (pair.getName().equalsIgnoreCase("apiKey") && !MCLegacy.getInstance().getConfig().apiKey.equals(pair.getValue()))
-                    response.getWriter().println(gson.toJson(new StandardResponse(false, "Invalid API key")));
+            sendInternalError(response);
+            return;
         }
 
-        if (contentLoader == null || templateLoader == null) return;
-        String returnContent = templateProcessor.getCurrentContent();
-        response.getWriter().println(returnContent);
+        if (enableKeyCheck && !hasValidAPIKey(request))
+        {
+            sendInternalError(response, "Invalid API key", 403);
+            return;
+        }
+
+        status(response, statusCode, contentType);
+        sendResource(response, resource);
     }
 
-    public static class StandardResponse
+    protected boolean hasValidAPIKey(HttpServletRequest request)
     {
-        public boolean success;
-        public String message;
-
-        public StandardResponse() {}
-
-        public StandardResponse(boolean success, String message)
+        List<NameValuePair> params = URLEncodedUtils.parse("http://dummy/?" + request.getQueryString(), StandardCharsets.UTF_8);
+        for (NameValuePair pair : params)
         {
-            this.success = success;
-            this.message = message;
+            if (!pair.getName().equalsIgnoreCase("apiKey")) continue;
+            return MCLegacy.getInstance().getConfig().web.apiKey.equals(pair.getValue());
         }
+        return false;
+    }
+
+    protected void basicDynamicStack()
+    {
+        dynamicResources.put("META", "shared/template/meta.html");
+        dynamicResources.put("CSS", "shared/template/css.html");
+        dynamicResources.put("SCRIPTS", "shared/template/scripts.html");
+        dynamicResources.put("HEADER", "shared/header.html");
+        dynamicResources.put("FOOTER", "shared/footer.html");
+    }
+
+    protected void status(HttpServletResponse response, int code, String type)
+    {
+        response.setStatus(statusCode);
+        response.setContentType(contentType);
+        response.setHeader("Server", "MCLegacy");
+    }
+
+    protected void sendResource(HttpServletResponse response, String resource) throws IOException
+    {
+        ResourceLoader rl = new ResourceLoader(resource);
+        sendResource(response, rl);
+    }
+
+    protected void sendResource(HttpServletResponse response, ResourceLoader resourceLoader) throws IOException
+    {
+        resourceLoader.preLoad();
+        for (String token : dynamicResources.keySet())
+            resourceLoader.injectResource(token, new ResourceLoader(dynamicResources.get(token)));
+        resourceLoader.injectContent("TYPE", "WEBSITE");
+        resourceLoader.injectContent("TITLE", "MCLegacy");
+        resourceLoader.injectContent("DESCRIPTION", "Management at a glance - Legacy Minecraft Server Solutions");
+        resourceLoader.injectContent("URL", "https://mclegacy.net");
+        resourceLoader.injectContent("IMAGE", "https://mclegacy.net/img/minecraft.png");
+        resourceLoader.injectContent("GEN_TIME", String.valueOf(timeKeeper.calc()));
+        response.getWriter().print(resourceLoader.getPreLoadContent());
+    }
+
+    protected void sendStringResource(HttpServletResponse response, String str) throws IOException
+    {
+        response.getWriter().print(str);
+    }
+
+    protected void sendInternalError(HttpServletResponse response) throws IOException
+    {
+        sendInternalError(response, "An internal error occurred. If you are able, please notify the system administrator.");
+    }
+
+    protected void sendInternalError(HttpServletResponse response, String message) throws IOException
+    {
+        sendInternalError(response, message, 500);
+    }
+
+    protected void sendInternalError(HttpServletResponse response, String message, int statusCode) throws IOException
+    {
+        response.setStatus(statusCode);
+        response.setContentType("text/plain");
+        response.setHeader("Server", "MCLegacy");
+        response.getWriter().println(message);
     }
 }

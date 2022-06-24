@@ -3,26 +3,16 @@ package net.mclegacy.server;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.stream.JsonReader;
+import net.mclegacy.server.cache.CacheManager;
 import net.mclegacy.server.main.Main;
-import net.mclegacy.server.page.Page;
 import net.mclegacy.server.servlets.Asset;
-import net.mclegacy.server.servlets.hosting.HostingIndex;
-import net.mclegacy.server.servlets.hosting.MinecraftServers;
-import net.mclegacy.server.servlets.hosting.SBoxServers;
+import net.mclegacy.server.servlets.Bans;
+import net.mclegacy.server.servlets.srv.Console;
 import net.mclegacy.server.servlets.user.UserDashboard;
 import net.mclegacy.server.servlets.user.UserLogin;
-import net.mclegacy.server.servlets.videos.Videos;
-import net.mclegacy.server.servlets.videos.ViewVideo;
 import net.mclegacy.server.util.SystemConfiguration;
 import net.mclegacy.server.servlets.Index;
-import net.mclegacy.server.servlets.bans.Bans;
-import net.mclegacy.server.servlets.bans.ViewBan;
-import net.mclegacy.server.servlets.community.CommunityHome;
 import net.mclegacy.server.servlets.error.GenericError;
-import net.mclegacy.server.servlets.guides.Guides;
-import net.mclegacy.server.servlets.guides.ViewGuide;
-import net.mclegacy.server.servlets.mods.Mods;
-import net.mclegacy.server.servlets.mods.ViewMod;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
@@ -30,13 +20,10 @@ import org.eclipse.jetty.servlet.DefaultServlet;
 import org.eclipse.jetty.servlet.ErrorPageErrorHandler;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
-import org.ehcache.CacheManager;
-import org.ehcache.config.builders.CacheConfigurationBuilder;
-import org.ehcache.config.builders.CacheManagerBuilder;
-import org.ehcache.config.builders.ResourcePoolsBuilder;
 
 import java.io.*;
-import java.util.ArrayList;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.logging.Logger;
 
 public class MCLegacy
@@ -52,25 +39,18 @@ public class MCLegacy
     private CacheManager cacheManager;
     private SystemConfiguration config;
     private Server jettyServer;
-    private ArrayList<Page> pages;
 
     public void init()
     {
         try
         {
             instance = this;
-            long startTime = System.currentTimeMillis();
-            cacheManager = CacheManagerBuilder.newCacheManagerBuilder()
-                    .withCache("preConfigured",
-                            CacheConfigurationBuilder.newCacheConfigurationBuilder(Long.class, String.class, ResourcePoolsBuilder.heap(10)))
-                    .build(true);
-            pages = new ArrayList<>();
+            Instant startTime = Instant.now();
+            cacheManager = new CacheManager();
             loadConfig();
             initWeb();
             debugCheck();
-            long endTime = System.currentTimeMillis();
-
-            log.info("MCLegacy initialized in " + (endTime - startTime) + " milliseconds.");
+            log.info(String.format("MCLegacy v%s initialized in %s milliseconds.", VERSION, Duration.between(startTime, Instant.now()).toMillis()));
         } catch (Exception ex) {
             ex.printStackTrace();
             log.severe("MCLegacy initialization failed: " + ex.getMessage());
@@ -92,85 +72,76 @@ public class MCLegacy
     {
         jettyServer = new Server();
         ServerConnector connector = new ServerConnector(jettyServer);
-        connector.setPort(config.jettyNetworkConfiguration.bindPort);
+        connector.setHost(config.jetty.bindAddress);
+        connector.setPort(config.jetty.bindPort);
         jettyServer.setConnectors(new Connector[]{connector});
+        jettyServer.setStopAtShutdown(true);
         ServletContextHandler handler = new ServletContextHandler();
-
         handler.setContextPath("/");
 
         // img holder
         ServletHolder imgHolder = new ServletHolder("img", DefaultServlet.class);
-        imgHolder.setInitParameter("resourceBase", getConfig().contentDirectory + "img/");
-        imgHolder.setInitParameter("dirAllowed", "true");
+        imgHolder.setInitParameter("resourceBase", getConfig().web.contentDirectory + "img/");
+        imgHolder.setInitParameter("dirAllowed", "false");
         imgHolder.setInitParameter("pathInfoOnly", "true");
         handler.addServlet(imgHolder, "/img/*");
 
         // css holder
         ServletHolder cssHolder = new ServletHolder("css", DefaultServlet.class);
-        cssHolder.setInitParameter("resourceBase", getConfig().contentDirectory + "css/");
+        cssHolder.setInitParameter("resourceBase", getConfig().web.contentDirectory + "css/");
         cssHolder.setInitParameter("dirAllowed", "true");
         cssHolder.setInitParameter("pathInfoOnly", "true");
         handler.addServlet(cssHolder, "/css/*");
 
         // public js holder
         ServletHolder jsHolder = new ServletHolder("js-public", DefaultServlet.class);
-        jsHolder.setInitParameter("resourceBase", getConfig().contentDirectory + "js-public/");
-        jsHolder.setInitParameter("dirAllowed", "true");
+        jsHolder.setInitParameter("resourceBase", getConfig().web.contentDirectory + "js-public/");
+        jsHolder.setInitParameter("dirAllowed", "false");
         jsHolder.setInitParameter("pathInfoOnly", "true");
         handler.addServlet(jsHolder, "/js/*");
 
         // fonts holder
         ServletHolder fontsHolder = new ServletHolder("fonts", DefaultServlet.class);
-        fontsHolder.setInitParameter("resourceBase", getConfig().contentDirectory + "fonts/");
+        fontsHolder.setInitParameter("resourceBase", getConfig().web.contentDirectory + "fonts/");
         fontsHolder.setInitParameter("dirAllowed", "true");
         fontsHolder.setInitParameter("pathInfoOnly", "true");
         handler.addServlet(cssHolder, "/fonts/*");
 
+        // downloads holder
+        ServletHolder dlHolder = new ServletHolder("downloads", DefaultServlet.class);
+        jsHolder.setInitParameter("resourceBase", getConfig().web.contentDirectory + "downloads/");
+        jsHolder.setInitParameter("dirAllowed", "false");
+        jsHolder.setInitParameter("pathInfoOnly", "true");
+        handler.addServlet(jsHolder, "/dl/*");
+
         // index & backend
-        pages.add(new Page(Index.class, "/"));
-        pages.add(new Page(Asset.class, "/asset"));
-
-        // bans
-        pages.add(new Page(Bans.class, "/bans"));
-        pages.add(new Page(ViewBan.class, "/vb"));
-
-        // guides
-        pages.add(new Page(Guides.class, "/guides"));
-        pages.add(new Page(ViewGuide.class, "/g/*"));
-
-        // videos
-        pages.add(new Page(Videos.class, "/videos"));
-        pages.add(new Page(ViewVideo.class, "/v/*"));
-
-        // mods
-        pages.add(new Page(Mods.class, "/mods"));
-        pages.add(new Page(ViewMod.class, "/m/*"));
-
-        // community
-        pages.add(new Page(CommunityHome.class, "/community"));
-
-        // user
-        pages.add(new Page(UserDashboard.class, "/user/dashboard"));
-        pages.add(new Page(UserLogin.class, "/user/login"));
-
-        // hosting
-        pages.add(new Page(HostingIndex.class, "/hosting"));
-        pages.add(new Page(MinecraftServers.class, "/hosting/minecraft"));
-        pages.add(new Page(SBoxServers.class, "/hosting/sbox"));
-        pages.add(new Page(HostingIndex.class, "/hosting/admin"));
-
-        // error
+        handler.addServlet(Index.class, "/");
+        handler.addServlet(Asset.class, "/asset");
+        handler.addServlet(Bans.class, "/bans");
+        handler.addServlet(UserDashboard.class, "/user/dashboard");
+        handler.addServlet(UserLogin.class, "/user/login");
+        handler.addServlet(Console.class, "/srv/console");
+        //handler.addServlet(ChatSystem.class, "/chat");
         handler.addServlet(GenericError.class, "/error");
-
-        for (Page page : pages) handler.addServlet(page.getServletClass(), page.getPathSpec());
 
         ErrorPageErrorHandler errorHandler = new ErrorPageErrorHandler();
         errorHandler.addErrorPage(404, "/error");
         errorHandler.addErrorPage(500, "/error");
-        //handler.setErrorHandler(errorHandler);
+        handler.setErrorHandler(errorHandler);
 
         jettyServer.setHandler(handler);
         jettyServer.start();
+
+        // ensure the jetty server gets shutdown when the jvm exits
+        Runtime.getRuntime().addShutdownHook(new Thread(() ->
+        {
+            try
+            {
+                jettyServer.stop();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }));
     }
 
     private void loadConfig() throws IOException
@@ -195,5 +166,10 @@ public class MCLegacy
     public CacheManager getCacheManager()
     {
         return cacheManager;
+    }
+
+    public static int getLine()
+    {
+        return new Throwable().getStackTrace()[0].getLineNumber();
     }
 }
