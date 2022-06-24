@@ -5,9 +5,14 @@ public class TimeKeeper
     public long start;
     public long end;
 
-    public int calc()
+    public void start()
+    {
+        start = System.currentTimeMillis();
+    }
+
+    public long calc()
     {
         end = System.currentTimeMillis();
-        return (int) (end - start);
+        return (end - start);
     }
 }

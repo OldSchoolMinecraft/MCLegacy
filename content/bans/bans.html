@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>${TITLE}</title>
+        ${META}
+
+        ${CSS}
+        <link rel="stylesheet" href="css/bans.css">
+        ${SCRIPTS}
+    </head>
+    <body>
+        <div id="header">${HEADER}</div>
+        <main class="container">
+            <div id="statistics" class="text-center">
+                (
+                <span><b>${STAT_BANS} Bans</b></span>
+                <span>•</span>
+                <span><b>${STAT_SERVERS} Servers</b></span>
+                <span>•</span>
+                <span><b>${STAT_MODS} Moderators</b></span>
+                )
+            </div>
+            <table class="table bans-table" id="bans">
+                <thead>
+                    <tr>
+                        <th scope="col">Server</th>
+                        <th scope="col">Username</th>
+                        <th scope="col">Reason</th>
+                        <th scope="col">Expiration</th>
+                        <th scope="col">Issued by</th>
+                        <th scope="col">Issued at</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${BANS_DATA}
+                </tbody>
+            </table>
+            <ul class="pagination">
+                <li class="page-item"><a class="page-link" href="#">Previous</a></li>
+                <li class="page-item"><a class="page-link" href="#">1</a></li>
+                <li class="page-item"><a class="page-link" href="#">2</a></li>
+                <li class="page-item"><a class="page-link" href="#">3</a></li>
+                <li class="page-item"><a class="page-link" href="#">Next</a></li>
+            </ul>
+        </main>
+    </body>
+</html>

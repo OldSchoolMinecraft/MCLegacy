@@ -1,0 +1,82 @@
+#statistics {
+    background-color: #035;
+    color: #fff;
+    padding: 5px;
+    border-radius: 10px;
+    margin-bottom: 15px;
+}
+
+#statistics span {
+    margin-left: 15px;
+    margin-right: 15px;
+}
+
+.lblBanHeader {
+    margin-bottom: 15px;
+}
+
+.bans-table {
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+    margin-bottom: 15px;
+}
+
+#playerInfo {
+    display: flex;
+}
+
+#playerInfo ul {
+    list-style: none;
+    border-style: dashed;
+    margin: 0px;
+    margin-left: 25px;
+    padding: 5px;
+}
+
+#playerInfo span {
+    text-align: center;
+    margin: 5px;
+    padding: 5px;
+}
+
+.scroll-container {
+  overflow: hidden;
+}
+
+.scroll-text {
+  /* animation properties */
+  -moz-transform: translateX(100%);
+  -webkit-transform: translateX(100%);
+  transform: translateX(100%);
+  overflow: hidden;
+
+  -moz-animation: scroll-anim 15s linear infinite;
+  -webkit-animation: scroll-anim 15s linear infinite;
+  animation: scroll-anim 15s linear infinite;
+}
+
+/* for Firefox */
+@-moz-keyframes scroll-anim {
+  from { -moz-transform: translateX(100%); }
+  to { -moz-transform: translateX(-100%); }
+}
+
+/* for Chrome */
+@-webkit-keyframes scroll-anim {
+  from { -webkit-transform: translateX(100%); }
+  to { -webkit-transform: translateX(-100%); }
+}
+
+@keyframes scroll-anim {
+  from {
+    -moz-transform: translateX(100%);
+    -webkit-transform: translateX(100%);
+    transform: translateX(100%);
+  }
+  to {
+    -moz-transform: translateX(-100%);
+    -webkit-transform: translateX(-100%);
+    transform: translateX(-100%);
+  }
+}

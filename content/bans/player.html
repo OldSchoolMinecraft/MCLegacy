@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>${TITLE}</title>
+        ${META}
+
+        ${CSS}
+        <link rel="stylesheet" href="css/bans.css">
+        ${SCRIPTS}
+    </head>
+    <body>
+        <div id="header">${HEADER}</div>
+        <main class="container">
+            <div id="playerInfo">
+                <img src="https://api.gethydra.org/cosmetics/avatar?username=${USERNAME}&type=&size=128" alt="${USERNAME}">
+                <ul>
+                    <li><b>Username</b>: ${USERNAME}</li>
+                    <li><b>Currently Banned</b>: N/A</li>
+                </ul>
+            </div>
+            <hr>
+            <div class="col" id="bans">
+                <table class="table bans-table" id="bansIssuedTable">
+                    <span class="lblBanHeader"><b>Bans Issued</b></span>
+                    <thead>
+                        <tr>
+                            <th scope="col">Username</th>
+                            <th scope="col">Reason</th>
+                            <th scope="col">Expiration</th>
+                            <th scope="col">Issued at</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${BANS_ISSUED}
+                    </tbody>
+                </table>
+                <br/>
+                <table class="table bans-table">
+                    <span class="lblBanHeader"><b>Bans Received</b></span>
+                    <thead>
+                        <tr>
+                            <th scope="col">Server</th>
+                            <th scope="col">Reason</th>
+                            <th scope="col">Expiration</th>
+                            <th scope="col">Issued by</th>
+                            <th scope="col">Issued at</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${BANS_RECEIVED}
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </body>
+</html>
