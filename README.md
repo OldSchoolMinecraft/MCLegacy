@@ -1,9 +1,8 @@
 ## About This Project
-We are all about uniting the legacy community and providing useful tools & resources to everyone, free of charge. We have mods & plugins, texture packs, guides, videos, and even a fully featured social media platform.
+We aim to provide community resources to players & servers alike. We plan to expand our efforts to include many things, but for now we focus on server management.
 
 ## Where?
-The site *will* be live at https://mclegacy.net.<br/>
-The dev site will be live at https://dev.mclegacy.net.
+The site is live at https://mclegacy.net. Please note that it may be slightly outdated while we work to polish new features.
 
 ## Powered By
 * Jetty
