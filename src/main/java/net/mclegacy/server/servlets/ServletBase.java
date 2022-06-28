@@ -1,6 +1,7 @@
 package net.mclegacy.server.servlets;
 
 import net.mclegacy.server.MCLegacy;
+import net.mclegacy.server.util.APISecurityManager;
 import net.mclegacy.server.util.ResourceLoader;
 import net.mclegacy.server.util.SystemConfiguration;
 import net.mclegacy.server.util.TimeKeeper;
@@ -47,13 +48,26 @@ public abstract class ServletBase extends HttpServlet
 
     protected boolean hasValidAPIKey(HttpServletRequest request)
     {
-        List<NameValuePair> params = URLEncodedUtils.parse("http://dummy/?" + request.getQueryString(), StandardCharsets.UTF_8);
-        for (NameValuePair pair : params)
+        return request.getParameterMap().containsKey("apiKey") && request.getParameter("apiKey").equals(config.web.apiKey);
+    }
+
+    protected boolean hasValidAPIKey(HttpServletRequest request, String holderName)
+    {
+        try
         {
-            if (!pair.getName().equalsIgnoreCase("apiKey")) continue;
-            return MCLegacy.getInstance().getConfig().web.apiKey.equals(pair.getValue());
+            return request.getParameterMap().containsKey("apiKey") && APISecurityManager.checkKey(holderName, request.getParameter("apiKey"));
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
         }
-        return false;
+    }
+
+    protected boolean hasAllParams(HttpServletRequest request, String... keys)
+    {
+        boolean hasAll = true;
+        for (String key : keys)
+            if (!request.getParameterMap().containsKey(key)) hasAll = false;
+        return hasAll;
     }
 
     protected void basicDynamicStack()

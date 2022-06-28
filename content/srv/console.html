@@ -69,7 +69,6 @@
                     socket.onopen = function(event)
                     {
                         connected();
-                        socket.send(".mode REMOTE_CONSOLE");
                     };
 
                     socket.onmessage = function(event)

@@ -31,6 +31,27 @@ public class BanUtil
         return sdf.format(date);
     }
 
+    public static void issueBan(BanHolder ban) throws SQLException
+    {
+        Connection con = MySQL.getConnection();
+        PreparedStatement stmt = con.prepareStatement("INSERT INTO global_bans (server, username, reason, expiration, issued_by, issued_at) VALUES (?, ?, ?, ?, ?, ?)");
+        stmt.setString(1, ban.server);
+        stmt.setString(2, ban.username);
+        stmt.setString(3, ban.reason);
+        stmt.setString(4, ban.expiration);
+        stmt.setString(5, ban.issued_by);
+        stmt.setString(6, ban.issued_at);
+        stmt.execute();
+    }
+
+    public static void issueUnban(String username) throws SQLException
+    {
+        Connection con = MySQL.getConnection();
+        PreparedStatement stmt = con.prepareStatement("DELETE FROM global_bans WHERE username = ?");
+        stmt.setString(1, username);
+        stmt.execute();
+    }
+
     public static ArrayList<BanHolder> getBanRange(int min, int max) throws SQLException
     {
         Instant start = Instant.now();
@@ -117,20 +138,20 @@ public class BanUtil
             {
                 default:
                 case BANS:
-                    stmt = con.prepareStatement("SELECT count(DISTINCT(username)) FROM global_bans");
+                    stmt = con.prepareStatement("SELECT count(DISTINCT username) FROM global_bans");
                     break;
                 case SERVERS:
-                    stmt = con.prepareStatement("SELECT count(DISTINCT(server)) FROM global_bans");
+                    stmt = con.prepareStatement("SELECT count(DISTINCT server) FROM global_bans");
                     break;
                 case MODERATORS:
-                    stmt = con.prepareStatement("SELECT count(DISTINCT(issued_by)) FROM global_bans");
+                    stmt = con.prepareStatement("SELECT count(DISTINCT issued_by) FROM global_bans");
                     break;
             }
 
             ResultSet rs = stmt.executeQuery();
 
             if (rs.next())
-                return rs.getInt("count");
+                return rs.getInt(1);
         } catch (Exception ex) {
             ex.printStackTrace();
         }

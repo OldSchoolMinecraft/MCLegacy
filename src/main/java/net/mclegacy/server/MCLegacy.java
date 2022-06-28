@@ -6,10 +6,14 @@ import com.google.gson.stream.JsonReader;
 import net.mclegacy.server.cache.CacheManager;
 import net.mclegacy.server.main.Main;
 import net.mclegacy.server.servlets.Asset;
-import net.mclegacy.server.servlets.Bans;
+import net.mclegacy.server.servlets.bans.Bans;
+import net.mclegacy.server.servlets.bans.Issue;
+import net.mclegacy.server.servlets.bans.Unban;
+import net.mclegacy.server.servlets.dynmap.DynmapIndex;
 import net.mclegacy.server.servlets.srv.Console;
 import net.mclegacy.server.servlets.user.UserDashboard;
 import net.mclegacy.server.servlets.user.UserLogin;
+import net.mclegacy.server.util.APISecurityManager;
 import net.mclegacy.server.util.SystemConfiguration;
 import net.mclegacy.server.servlets.Index;
 import net.mclegacy.server.servlets.error.GenericError;
@@ -60,11 +64,17 @@ public class MCLegacy
 
     private void debugCheck()
     {
-        if (System.getenv().containsKey("MCL_DEBUG"))
+        try
         {
-            log.info("=====================");
-            log.info("DEBUG MODE IS ENABLED");
-            log.info("=====================");
+            if (System.getenv().containsKey("MCL_DEBUG"))
+            {
+                log.info("=====================");
+                log.info("DEBUG MODE IS ENABLED");
+                log.info("Access Key: " + APISecurityManager.registerNewKey("debug"));
+                log.info("=====================");
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
     }
 
@@ -103,7 +113,7 @@ public class MCLegacy
         // fonts holder
         ServletHolder fontsHolder = new ServletHolder("fonts", DefaultServlet.class);
         fontsHolder.setInitParameter("resourceBase", getConfig().web.contentDirectory + "fonts/");
-        fontsHolder.setInitParameter("dirAllowed", "true");
+        fontsHolder.setInitParameter("dirAllowed", "false");
         fontsHolder.setInitParameter("pathInfoOnly", "true");
         handler.addServlet(cssHolder, "/fonts/*");
 
@@ -114,13 +124,23 @@ public class MCLegacy
         jsHolder.setInitParameter("pathInfoOnly", "true");
         handler.addServlet(jsHolder, "/dl/*");
 
+        // dynmap holder
+        ServletHolder dynmapHolder = new ServletHolder("dynmap", DefaultServlet.class);
+        dynmapHolder.setInitParameter("resourceBase", getConfig().web.contentDirectory + "dynmap/");
+        dynmapHolder.setInitParameter("dirAllowed", "true");
+        dynmapHolder.setInitParameter("pathInfoOnly", "true");
+        handler.addServlet(dynmapHolder, "/dynmap/*");
+
         // index & backend
         handler.addServlet(Index.class, "/");
         handler.addServlet(Asset.class, "/asset");
         handler.addServlet(Bans.class, "/bans");
+        handler.addServlet(Issue.class, "/bans/issue");
+        handler.addServlet(Unban.class, "/bans/unban");
         handler.addServlet(UserDashboard.class, "/user/dashboard");
         handler.addServlet(UserLogin.class, "/user/login");
         handler.addServlet(Console.class, "/srv/console");
+        handler.addServlet(DynmapIndex.class, "/dynmap/dmap");
         //handler.addServlet(ChatSystem.class, "/chat");
         handler.addServlet(GenericError.class, "/error");
 

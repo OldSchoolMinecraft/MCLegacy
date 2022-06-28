@@ -1,9 +1,10 @@
-package net.mclegacy.server.servlets;
+package net.mclegacy.server.servlets.bans;
 
 import net.mclegacy.server.MCLegacy;
 import net.mclegacy.server.cache.Page1Bans;
 import net.mclegacy.server.cache.PlayerIssuedBans;
 import net.mclegacy.server.main.Main;
+import net.mclegacy.server.servlets.ServletBase;
 import net.mclegacy.server.servlets.bans.Player;
 import net.mclegacy.server.util.BanHolder;
 import net.mclegacy.server.util.BanUtil;
@@ -56,13 +57,15 @@ public class Bans extends ServletBase
             }
             ResourceLoader rl = new ResourceLoader(resource).preLoad();
             rl.injectContent("BANS_DATA", sb.toString());
-            rl.injectContent("STAT_BANS", String.valueOf(banCache.getAll().size()));
-            rl.injectContent("STAT_SERVERS", String.valueOf(0));
-            rl.injectContent("STAT_MODS", String.valueOf(0));
+            rl.injectContent("STAT_BANS", String.valueOf(BanUtil.getStatistic(BanUtil.Statistic.BANS)));
+            rl.injectContent("STAT_SERVERS", String.valueOf(BanUtil.getStatistic(BanUtil.Statistic.SERVERS)));
+            rl.injectContent("STAT_MODS", String.valueOf(BanUtil.getStatistic(BanUtil.Statistic.MODERATORS)));
             status(response, 200, contentType);
             sendResource(response, rl);
-        } catch (NumberFormatException | SQLException ex) {
+        } catch (Exception ex) {
             ex.printStackTrace();
+            status(response, 500, "text/plain");
+            sendStringResource(response, ex.getMessage());
         }
     }
 }
