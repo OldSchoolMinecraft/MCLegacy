@@ -14,14 +14,13 @@ public class Asset extends ServletBase
 {
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException
     {
-        List<NameValuePair> params = URLEncodedUtils.parse(request.getQueryString(), StandardCharsets.UTF_8);
-        String assetKey = "";
-        for (NameValuePair p : params) if (p.getName().equalsIgnoreCase("key")) assetKey = p.getValue();
-        if (assetKey == null || assetKey.isEmpty())
+        if (!hasAllParams(request, "key"))
         {
-            response.getWriter().println("Failed to read asset, assetKey=" + assetKey);
+            sendStringResource(response, "Missing parameters");
             return;
         }
+
+        String assetKey = request.getParameter("key");
 
         ResourceLoader resourceLoader = new ResourceLoader(assetKey);
         if (!resourceLoader.isGood()) return;

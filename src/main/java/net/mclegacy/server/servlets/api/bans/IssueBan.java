@@ -1,6 +1,9 @@
-package net.mclegacy.server.servlets.bans;
+package net.mclegacy.server.servlets.api.bans;
 
 import com.google.gson.Gson;
+import net.mclegacy.server.MCLegacy;
+import net.mclegacy.server.cache.Page1Bans;
+import net.mclegacy.server.main.Main;
 import net.mclegacy.server.servlets.ServletBase;
 import net.mclegacy.server.util.BanHolder;
 import net.mclegacy.server.util.BanUtil;
@@ -8,9 +11,11 @@ import net.mclegacy.server.util.BanUtil;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.logging.Logger;
 
-public class Issue extends ServletBase
+public class IssueBan extends ServletBase
 {
+    private static final Logger log = Main.getLogger();
     private static final Gson gson = new Gson();
 
     @Override
@@ -37,6 +42,13 @@ public class Issue extends ServletBase
                     banHolder.expiration,
                     banHolder.issued_by,
                     banHolder.issued_at));
+
+            new Thread(() ->
+            {
+                Page1Bans bansCache = (Page1Bans) MCLegacy.getInstance().getCacheManager().getCache("p1bans");
+                if (bansCache == null) { bansCache = new Page1Bans(MCLegacy.getInstance().getConfig().bans.cachePurgeInterval); }
+                else bansCache.refresh(true);
+            }, "p1bans-purge@bans/issue").start();
 
             status(response, 200, "text/plain");
             sendStringResource(response, "OK");

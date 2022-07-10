@@ -6,10 +6,13 @@ import com.google.gson.stream.JsonReader;
 import net.mclegacy.server.cache.CacheManager;
 import net.mclegacy.server.main.Main;
 import net.mclegacy.server.servlets.Asset;
+import net.mclegacy.server.servlets.api.bans.LookupBan;
+import net.mclegacy.server.servlets.api.servers.FetchIcon;
 import net.mclegacy.server.servlets.bans.Bans;
-import net.mclegacy.server.servlets.bans.Issue;
-import net.mclegacy.server.servlets.bans.Unban;
+import net.mclegacy.server.servlets.api.bans.IssueBan;
+import net.mclegacy.server.servlets.api.bans.RevokeBan;
 import net.mclegacy.server.servlets.dynmap.DynmapIndex;
+import net.mclegacy.server.servlets.servers.ViewServer;
 import net.mclegacy.server.servlets.srv.Console;
 import net.mclegacy.server.servlets.user.UserDashboard;
 import net.mclegacy.server.servlets.user.UserLogin;
@@ -134,15 +137,25 @@ public class MCLegacy
         // index & backend
         handler.addServlet(Index.class, "/");
         handler.addServlet(Asset.class, "/asset");
+        handler.addServlet(GenericError.class, "/error");
+
+        // bans
         handler.addServlet(Bans.class, "/bans");
-        handler.addServlet(Issue.class, "/bans/issue");
-        handler.addServlet(Unban.class, "/bans/unban");
+        handler.addServlet(IssueBan.class, "/api/v1/bans/issue");
+        handler.addServlet(RevokeBan.class, "/api/v1/bans/revoke");
+        handler.addServlet(LookupBan.class, "/api/v1/bans/lookup");
+
+        // users
         handler.addServlet(UserDashboard.class, "/user/dashboard");
         handler.addServlet(UserLogin.class, "/user/login");
+
+        // servers
+        handler.addServlet(ViewServer.class, "/servers/view");
         handler.addServlet(Console.class, "/srv/console");
+        handler.addServlet(FetchIcon.class, "/api/v1/servers/fetchIcon");
+
+        // misc
         handler.addServlet(DynmapIndex.class, "/dynmap/dmap");
-        //handler.addServlet(ChatSystem.class, "/chat");
-        handler.addServlet(GenericError.class, "/error");
 
         ErrorPageErrorHandler errorHandler = new ErrorPageErrorHandler();
         errorHandler.addErrorPage(404, "/error");

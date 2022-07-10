@@ -81,8 +81,8 @@ public abstract class ServletBase extends HttpServlet
 
     protected void status(HttpServletResponse response, int code, String type)
     {
-        response.setStatus(statusCode);
-        response.setContentType(contentType);
+        response.setStatus(code);
+        response.setContentType(type);
         response.setHeader("Server", "MCLegacy");
     }
 

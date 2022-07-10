@@ -26,7 +26,7 @@ public class BanUtil
     {
         long unixTimestamp = Long.parseLong(input);
         Date date = new Date(unixTimestamp * 1000L);
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss z");
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss a z");
         sdf.setTimeZone(TimeZone.getTimeZone("PST"));
         return sdf.format(date);
     }
@@ -82,7 +82,7 @@ public class BanUtil
         Instant start = Instant.now();
         ArrayList<BanHolder> returnArray = new ArrayList<>();
         Connection con = MySQL.getConnection();
-        PreparedStatement stmt = con.prepareStatement(String.format("SELECT * FROM global_bans WHERE username = ? ORDER BY issued_at DESC"));
+        PreparedStatement stmt = con.prepareStatement(String.format("SELECT * FROM global_bans WHERE username = ? ORDER BY issued_at DESC LIMIT 25"));
         stmt.setString(1, usernameTarget);
         ResultSet rs = stmt.executeQuery();
 
@@ -107,7 +107,7 @@ public class BanUtil
         Instant start = Instant.now();
         ArrayList<BanHolder> returnArray = new ArrayList<>();
         Connection con = MySQL.getConnection();
-        PreparedStatement stmt = con.prepareStatement(String.format("SELECT * FROM global_bans WHERE issued_by = ? ORDER BY issued_at DESC"));
+        PreparedStatement stmt = con.prepareStatement(String.format("SELECT * FROM global_bans WHERE issued_by = ? ORDER BY issued_at DESC LIMIT 25"));
         stmt.setString(1, usernameTarget);
         ResultSet rs = stmt.executeQuery();
 
@@ -125,6 +125,31 @@ public class BanUtil
         if (System.getenv().containsKey("MCL_DEBUG"))
             log.warning(String.format("Retrieved bans issued by %s, took %sms", usernameTarget, Duration.between(start, Instant.now()).toMillis()));
         return returnArray;
+    }
+
+    public static BanHolder getSpecificBan(String usernameTarget) throws SQLException
+    {
+        Instant start = Instant.now();
+        Connection con = MySQL.getConnection();
+        PreparedStatement stmt = con.prepareStatement(String.format("SELECT * FROM global_bans WHERE username = ? LIMIT 1"));
+        stmt.setString(1, usernameTarget);
+        ResultSet rs = stmt.executeQuery();
+
+        if (rs.next())
+        {
+            String server = rs.getString("server");
+            String username = rs.getString("username");
+            String reason = rs.getString("reason");
+            String expiration = rs.getString("expiration");
+            String issued_by = rs.getString("issued_by");
+            String issued_at = rs.getString("issued_at");
+            BanHolder b = new BanHolder(server, username, reason, expiration, issued_by, issued_at);
+            if (Debugger.isEnabled())
+                log.warning(String.format("Retrieved bans issued by %s, took %sms", usernameTarget, Duration.between(start, Instant.now()).toMillis()));
+            return b;
+        }
+        log.severe(String.format("Lookup failed: MCLegacy tried to find '%s' but was unable to locate a matching record", usernameTarget));
+        return null;
     }
 
     public static int getStatistic(Statistic stat)

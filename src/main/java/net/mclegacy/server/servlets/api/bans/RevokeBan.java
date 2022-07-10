@@ -1,4 +1,4 @@
-package net.mclegacy.server.servlets.bans;
+package net.mclegacy.server.servlets.api.bans;
 
 import net.mclegacy.server.servlets.ServletBase;
 import net.mclegacy.server.util.BanUtil;
@@ -7,7 +7,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-public class Unban extends ServletBase
+public class RevokeBan extends ServletBase
 {
     @Override
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException

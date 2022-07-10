@@ -16,15 +16,31 @@ public class Page1Bans extends ObjectCache<BanHolder>
         super("p1bans", cachePurgeInterval);
     }
 
+    public void refresh(boolean force)
+    {
+        if (force) hardRefresh();
+        super.refresh();
+    }
+
     @Override
     public void refresh()
     {
         try
         {
             if (!timeToDie()) return;
+            hardRefresh();
+            super.refresh();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    private void hardRefresh()
+    {
+        try
+        {
             clear();
             addAll(BanUtil.getBanRange(0, MCLegacy.getInstance().getConfig().bans.entriesPerPage));
-            super.refresh();
         } catch (Exception ex) {
             ex.printStackTrace();
         }

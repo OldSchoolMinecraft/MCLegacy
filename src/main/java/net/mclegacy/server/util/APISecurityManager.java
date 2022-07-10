@@ -14,7 +14,9 @@ public class APISecurityManager
 
     public static boolean checkKey(String holderName, String key) throws IOException
     {
-        return new String(Files.readAllBytes(Paths.get(getKeyFile(holderName).getAbsolutePath()))).equals(key);
+        File keyFile = getKeyFile(holderName);
+        if (!keyFile.exists()) return false;
+        return new String(Files.readAllBytes(Paths.get(keyFile.getAbsolutePath()))).equals(key);
     }
 
     public static void deleteKey(String holderName)
